@@ -48,6 +48,26 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Moq.Proxy
 {
+    /// <summary>
+    /// Extension methods for Moq
+    /// </summary>
+    public static class MoqSynchronisedExtensions
+    {
+        private static readonly ProxyGenerator _generator = new ProxyGenerator();
+
+        /// <summary>
+        /// gets synchronized mock object
+        /// </summary>
+        /// <typeparam name="TType"></typeparam>
+        /// <param name="mock"></param>
+        /// <returns></returns>
+        public static TType GetSynchronizedObject<TType>(this Mock<TType> mock) where TType : class
+        {
+            var synchronizedObject = _generator.CreateInterfaceProxyWithTarget<TType>(mock.Object, new CastleProxyFactory.SynchronizedInterceptor());
+            return synchronizedObject;
+        }
+    }
+
 	internal class CastleProxyFactory : IProxyFactory
 	{
 		private static readonly ProxyGenerator generator = CreateProxyGenerator();
@@ -112,6 +132,19 @@ namespace Moq.Proxy
 				this.interceptor.Intercept(new CallContext(invocation));
 			}
 		}
+
+        public class SynchronizedInterceptor : IInterceptor
+        {
+            private object lockObject = new object();
+
+            public void Intercept(IInvocation invocation)
+            {
+                lock (lockObject)
+                {
+                    invocation.Proceed();
+                }
+            }
+        }
 
 		private class CallContext : ICallContext
 		{

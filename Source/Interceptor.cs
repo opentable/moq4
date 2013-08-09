@@ -70,11 +70,13 @@ namespace Moq
 
 		internal IEnumerable<ICallContext> ActualCalls
 		{
+			// get { return this.actualInvocations; }
 			get
 			{
-			    lock (actualInvocations)
+                lock(this.actualInvocations)
 			    {
-                    return this.actualInvocations.ToArray();
+                    var result = actualInvocations.ToArray();
+                    return result;
 			    }
 			}
 		}
